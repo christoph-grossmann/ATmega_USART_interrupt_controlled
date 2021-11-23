@@ -23,7 +23,7 @@
 #define BAUD 19200
 
 // Calculate UBRR (baud rate register) value // ATmega328P[DATASHEET] p. 145
-#define UBRRVAL ((FOCS / (BAUD * 16UL)) - 1)
+#define USART_UBRRVAL ((FOCS / (BAUD * 16UL)) - 1)
 
 /* 
  * Message settings.

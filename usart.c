@@ -417,8 +417,8 @@ void usart_init(void)
     USART_PRR &= ~(1 << USART_PRUSART);
 
     // Set baud rate // ATmega328P[DATASHEET] p. 149
-    USART_UBRRH = (unsigned char) (UBRRVAL >> 8);
-    USART_UBRRL = (unsigned char) UBRRVAL;
+    USART_UBRRH = (unsigned char) (USART_UBRRVAL >> 8);
+    USART_UBRRL = (unsigned char) USART_UBRRVAL;
 
     // Enable receiver, transmitter, and receive interrupt
     USART_UCSRB = ( 1 << USART_RXEN) | (1 << USART_TXEN) | (1 << USART_RXCIE);
