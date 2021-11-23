@@ -364,7 +364,7 @@ void usart_init(void)
 }
 
 // Reads the next unread message from the ring buffer into the usart_recv_... variables
-unsigned char usart_recv_buffer_next_message()
+unsigned char usart_recv_buffer_read()
 {
     if (!USART_BUFF_CONTAINS_UNREAD(usart_recv_buff_write_ptr, usart_recv_buff_read_ptr)) {
         return USART_ERROR; //  o new messages to return
