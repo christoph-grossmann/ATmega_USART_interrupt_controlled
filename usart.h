@@ -32,7 +32,7 @@
 #define USART_FRAME_LENGTH 10
 
 #define USART_PREAMBLE 0x40
-#define USART_MAX_PAYLOAD 64
+#define USART_MAX_PAYLOAD 16
 
 #define USART_TIMER_FRAME_HERTZ (BAUD / USART_FRAME_LENGTH + 1)
 // (ticks/s) / (2 * frames/s)
@@ -63,8 +63,8 @@ static volatile unsigned char usart_recv_payload[USART_MAX_PAYLOAD];
  * Ring buffer settings.
  */
 
-#define USART_RECV_BUFFER_SIZE 8
-#define USART_SEND_BUFFER_SIZE 8
+#define USART_RECV_BUFFER_SIZE 4
+#define USART_SEND_BUFFER_SIZE 4
 
 /*
  * Possible return values.
