@@ -26,19 +26,6 @@
 // Set USART_SEND_PIN (DE) to Send Mode
 #define USART_DE_TX (USART_PORT |= (1 << USART_SEND_PIN))
 
-#define USART_TIMER_OFF {\
-    USART_TIMER_TIMSK = 0;\
-    USART_TIMER_TCNT = 0;\
-    USART_TIMER_TCCRB = 0;\
-    }
-
-#define USART_TIMER_ON {\
-    USART_TIMER_TIMSK |= (1 << USART_TIMER_OCIEA);\
-    USART_TIMER_TIFR |= (1 << USART_TIMER_OCFA);\
-    USART_TIMER_TCNT = 0;\
-    USART_TIMER_TCCRB = (1 << USART_TIMER_CS0);\
-    }
-
 #define USART_UPDATE_CRC(crc, val) crc = pgm_read_byte(crc8_table + (crc ^ val))
 
 #define USART_BUFF_INCR_PTR(ptr, max) ptr = (ptr + 1) % max
@@ -428,14 +415,13 @@ void usart_init(void)
     USART_DDR |= (1 << USART_SEND_PIN);
     USART_DE_RX;
 
-    // Configure Timer
-    USART_TIMER_TCCRA = 0;
-    USART_TIMER_TCCRB = 0; // Timer deactivated
-    USART_TIMER_TCNT = 0;
+    // Configure and enable timer (watchdog for send/recv, enables send interrupt)
     USART_TIMER_OCRA = USART_TIMER_TIME;
-
-    // Enable timer (watchdog for send/recv, enables send interrupt)
-    USART_TIMER_ON;
+    USART_TIMER_TCCRA = 0;
+    USART_TIMER_TCCRB = (1 << USART_TIMER_CS0);
+    USART_TIMER_TIMSK |= (1 << USART_TIMER_OCIEA);
+    USART_TIMER_TIFR |= (1 << USART_TIMER_OCFA);
+    USART_TIMER_TCNT = 0;
 
     // Read id from EEPROM
     usart_device_id = usart_device_id_read();
