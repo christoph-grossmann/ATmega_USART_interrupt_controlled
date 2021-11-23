@@ -225,53 +225,6 @@ reset_send:
     USART_RECV_INTRRPT_NABLE;
 }
 
-unsigned char usart_send(const unsigned char *data, unsigned int length)
-{
-    unsigned char retval = USART_ERROR;
-
-    USART_RECV_INTRRPT_DABLE;
-    USART_DE_TX;
-
-    while(length--)
-    {
-        USART_UCSRA |= (1 << USART_TXC);
-        
-        while (!(USART_UCSRA & (1 << USART_UDRE))); //wait...
-        
-        USART_UDR = *data;
-        
-        while (!(USART_UCSRA & (1 << USART_TXC))); // wait until bits are sent
-
-        if (USART_UCSRA & (1 << USART_RXC))
-        {
-            unsigned char in = USART_UDR;
-            
-            if (in != *data)
-            {
-                // Oh, collision. Damn...
-                _delay_us(100);
-                goto send;
-            }
-        }
-        else
-        {
-            // Didn't receive anything. This actually should never happen.
-            _delay_us(100);
-            goto send;
-        }
-
-        data++;
-    }
-
-    retval = USART_SUCCESS;
-
-send:
-    USART_DE_RX;
-    USART_RECV_INTRRPT_NABLE;
-
-    return retval;
-}
-
 ISR(USART_RXC_VECT)
 {
     static unsigned char my_payload_length = 0;
