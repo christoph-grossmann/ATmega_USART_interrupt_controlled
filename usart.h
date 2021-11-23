@@ -29,9 +29,23 @@
  * Message settings.
  */
 
+#define USART_FRAME_LENGTH 10
+
 #define USART_PREAMBLE 0x40
 // The useable payloud length is USART_MAX_PAYLOAD - 5.
 #define USART_MAX_PAYLOAD 64
+
+#define USART_TIMER_FRAME_HERTZ (BAUD / USART_FRAME_LENGTH + 1)
+// (ticks/s) / (2 * frames/s)
+#define USART_TIMER_PRESCALE \
+    (FOCS /    2UL / USART_TIMER_FRAME_HERTZ < 0xff ?    1 : \
+    (FOCS /   16UL / USART_TIMER_FRAME_HERTZ < 0xff ?    8 : \
+    (FOCS /  128UL / USART_TIMER_FRAME_HERTZ < 0xff ?   64 : \
+    (FOCS /  512UL / USART_TIMER_FRAME_HERTZ < 0xff ?  256 : \
+    (FOCS / 2048UL / USART_TIMER_FRAME_HERTZ < 0xff ? 1024 : 0 \
+    )))))
+#define USART_TIMER_TIME \
+    (FOCS / 2UL / USART_TIMER_PRESCALE / USART_TIMER_FRAME_HERTZ + 1)
 
 /*
  * Provided functionality.

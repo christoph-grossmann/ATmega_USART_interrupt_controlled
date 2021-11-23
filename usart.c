@@ -438,7 +438,7 @@ void usart_init(void)
     USART_TIMER_TCCRA = 0;
     USART_TIMER_TCCRB = 0; // Timer deactivated
     USART_TIMER_TCNT = 0;
-    USART_TIMER_OCRA = 1475; // ~100.029µS
+    USART_TIMER_OCRA = USART_TIMER_TIME;
 
     // Enable timer (watchdog for send/recv, enables send interrupt)
     USART_TIMER_ON;
