@@ -20,10 +20,14 @@
 #endif
 
 // Set desired baud rate
+#ifndef BAUD
 #define BAUD 19200
+#endif
 
 // Calculate UBRR (baud rate register) value // ATmega328P[DATASHEET] p. 145
+#ifndef USART_UBRRVAL
 #define USART_UBRRVAL ((FOCS / (BAUD * 16UL)) - 1)
+#endif
 
 /* 
  * Message settings.
@@ -31,8 +35,12 @@
 
 #define USART_FRAME_LENGTH 10
 
+#ifndef USART_PREAMBLE
 #define USART_PREAMBLE 0x40
+#endif
+#ifndef USART_MAX_PAYLOAD
 #define USART_MAX_PAYLOAD 16
+#endif
 
 #define USART_TIMER_FRAME_HERTZ (BAUD / USART_FRAME_LENGTH + 1)
 // (ticks/s) / (2 * frames/s)
@@ -63,8 +71,12 @@ static volatile unsigned char usart_recv_payload[USART_MAX_PAYLOAD];
  * Ring buffer settings.
  */
 
+#ifndef USART_RECV_BUFFER_SIZE
 #define USART_RECV_BUFFER_SIZE 4
+#endif
+#ifndef USART_SEND_BUFFER_SIZE
 #define USART_SEND_BUFFER_SIZE 4
+#endif
 
 /*
  * Possible return values.
