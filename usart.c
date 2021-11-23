@@ -55,7 +55,7 @@ typedef struct {
 unsigned char src; // message source
 unsigned char dst; // message destination
 unsigned char len; // payloud length
-unsigned char data[USART_MAX_PAYLOAD - 5]; // payloud
+unsigned char data[USART_MAX_PAYLOAD]; // payloud
 } usart_message;
 
 static volatile unsigned char usart_myid;

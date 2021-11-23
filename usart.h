@@ -32,7 +32,6 @@
 #define USART_FRAME_LENGTH 10
 
 #define USART_PREAMBLE 0x40
-// The useable payloud length is USART_MAX_PAYLOAD - 5.
 #define USART_MAX_PAYLOAD 64
 
 #define USART_TIMER_FRAME_HERTZ (BAUD / USART_FRAME_LENGTH + 1)
@@ -58,7 +57,7 @@ int usart_send_buffer_write(const unsigned char src, const unsigned char dst, un
 static volatile unsigned char usart_recv_src;
 static volatile unsigned char usart_recv_dst;
 static volatile unsigned char usart_recv_payload_length;
-static volatile unsigned char usart_recv_payload[USART_MAX_PAYLOAD - 5];
+static volatile unsigned char usart_recv_payload[USART_MAX_PAYLOAD];
 
 /*
  * Ring buffer settings.
