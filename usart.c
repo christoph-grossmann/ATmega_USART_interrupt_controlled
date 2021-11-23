@@ -4,13 +4,10 @@
 
 #include "usart.h"
 
-#include <avr/io.h>
 #include <avr/interrupt.h>
 #include <avr/eeprom.h>
 #include <avr/pgmspace.h>
 #include <util/delay.h>
-#include <avr/sleep.h>
-#include <string.h>
 
 #define USART_STATE_IDLE 0
 #define USART_STATE_RXACT 1
