@@ -67,12 +67,11 @@
 
 void usart_init(void);
 unsigned char usart_recv_buffer_read();
-unsigned char usart_send_buffer_write(const unsigned char src, const unsigned char dst, unsigned char payload_length, unsigned char *payload);
+unsigned char usart_send_buffer_write(const unsigned char dst, unsigned char payload_length, unsigned char *payload);
 unsigned char usart_device_id_read();
 void usart_device_id_write(unsigned char device_id);
 
 static volatile unsigned char usart_recv_src;
-static volatile unsigned char usart_recv_dst;
 static volatile unsigned char usart_recv_payload_length;
 static volatile unsigned char usart_recv_payload[USART_MAX_PAYLOAD];
 

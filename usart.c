@@ -27,8 +27,7 @@
 #define USART_BUFF_HAS_SPACE(write_ptr, read_ptr, max) ((write_ptr + 1) % max != read_ptr)
 
 typedef struct {
-unsigned char src; // message source
-unsigned char dst; // message destination
+unsigned char add; // message address (send: destination; recv: source)
 unsigned char len; // payloud length
 unsigned char data[USART_MAX_PAYLOAD]; // payloud
 } usart_message;
@@ -139,7 +138,7 @@ ISR(USART_UDRE_VECT)
     }
     else if (usart_send_state == USART_STATE_RXACT)
     {
-        send_byte = usart_send_buff[usart_send_buff_read_ptr].src;
+        send_byte = usart_device_id;
         usart_send_state = USART_STATE_SRC;
 
         USART_UPDATE_CHECKSUM(checksum, send_byte);
@@ -147,7 +146,7 @@ ISR(USART_UDRE_VECT)
     }
     else if (usart_send_state == USART_STATE_SRC)
     {
-        send_byte = usart_send_buff[usart_send_buff_read_ptr].dst;
+        send_byte = usart_send_buff[usart_send_buff_read_ptr].add;
         usart_send_state = USART_STATE_DST;
 
         USART_UPDATE_CHECKSUM(checksum, send_byte);
@@ -206,7 +205,9 @@ reset_send:
 
 ISR(USART_RXC_VECT)
 {
-    static unsigned char my_payload_length = 0;
+    static unsigned char cur_src = 0;
+    static unsigned char cur_dst = 0;
+    static unsigned char cur_payload_length = 0;
     static unsigned char checksum = 0;
     static unsigned char *ptr = 0;
 
@@ -215,39 +216,52 @@ ISR(USART_RXC_VECT)
     if (usart_recv_state == USART_STATE_IDLE && in == USART_PREAMBLE) {
         checksum = in;
         usart_recv_state = USART_STATE_RXACT;
-
-        if (!USART_BUFF_HAS_SPACE(usart_recv_buff_write_ptr, usart_recv_buff_read_ptr, USART_RECV_BUFFER_SIZE))
-        {
-            // Delte oldest message if no space is available in the buffer
-            USART_BUFF_INCR_PTR(usart_recv_buff_write_ptr, USART_RECV_BUFFER_SIZE);
-        }
-
-        ptr = usart_recv_buff[usart_recv_buff_write_ptr].data;
     }
     else if (usart_recv_state == USART_STATE_RXACT)
     {
         USART_UPDATE_CHECKSUM(checksum, in);
         usart_recv_state = USART_STATE_SRC;
-        usart_recv_buff[usart_recv_buff_write_ptr].src = in;
+        cur_src = in;
     }
     else if (usart_recv_state == USART_STATE_SRC)
     {
         USART_UPDATE_CHECKSUM(checksum, in);
         usart_recv_state = USART_STATE_DST;
-        usart_recv_buff[usart_recv_buff_write_ptr].dst = in;
+        cur_dst = in;
+
+        if (cur_dst == usart_device_id || cur_dst == USART_BROADCAST_ID)
+        {
+            if (!USART_BUFF_HAS_SPACE(usart_recv_buff_write_ptr, usart_recv_buff_read_ptr, USART_RECV_BUFFER_SIZE))
+            {
+                // Delte oldest message if no space is available in the buffer
+                USART_BUFF_INCR_PTR(usart_recv_buff_write_ptr, USART_RECV_BUFFER_SIZE);
+            }
+
+            usart_recv_buff[usart_recv_buff_write_ptr].add = cur_src;
+            ptr = usart_recv_buff[usart_recv_buff_write_ptr].data;
+            cur_dst = 1;
+        }
+        else
+        {
+            cur_dst = 0;
+        }
     }
     else if (usart_recv_state == USART_STATE_DST)
     {
         USART_UPDATE_CHECKSUM(checksum, in);
         usart_recv_state = USART_STATE_PAYLOAD_LEN;
-        my_payload_length = in;
-        usart_recv_buff[usart_recv_buff_write_ptr].len = in;
+        cur_payload_length = in;
+
+        if (cur_dst)
+        {
+            usart_recv_buff[usart_recv_buff_write_ptr].len = in;
+        }
         
-        if (my_payload_length > USART_MAX_PAYLOAD)
+        if (cur_payload_length > USART_MAX_PAYLOAD)
         {
             goto reset_recv;
         }
-        else if (my_payload_length == 0)
+        else if (cur_payload_length == 0)
         {
             usart_recv_state = USART_STATE_PAYLOAD;
         }
@@ -255,16 +269,21 @@ ISR(USART_RXC_VECT)
     else if (usart_recv_state == USART_STATE_PAYLOAD_LEN)
     {
         USART_UPDATE_CHECKSUM(checksum, in);
-        *ptr++ = in;
-        my_payload_length--;
+        cur_payload_length--;
 
-        if (my_payload_length == 0) {
+        if (cur_dst)
+        {
+            *ptr++ = in;
+        }
+
+        if (cur_payload_length == 0) {
             usart_recv_state = USART_STATE_PAYLOAD;
         }
     }
     else if (usart_recv_state == USART_STATE_PAYLOAD)
     {
-        if (checksum == in && usart_recv_buff[usart_recv_buff_write_ptr].dst == usart_device_id) {
+        if (checksum == in && cur_dst)
+		{
             USART_BUFF_INCR_PTR(usart_recv_buff_write_ptr, USART_RECV_BUFFER_SIZE);
         }
         goto reset_recv;
@@ -274,7 +293,7 @@ ISR(USART_RXC_VECT)
 
 reset_recv:
     ptr = 0;
-    my_payload_length = 0;
+    cur_payload_length = 0;
     checksum = 0;
     usart_recv_state = USART_STATE_IDLE;
 }
@@ -373,8 +392,7 @@ unsigned char usart_recv_buffer_read()
     // Disable all interrupts
     cli();
 
-    usart_recv_src = usart_recv_buff[usart_recv_buff_read_ptr].src;
-    usart_recv_dst = usart_recv_buff[usart_recv_buff_read_ptr].dst;
+    usart_recv_src = usart_recv_buff[usart_recv_buff_read_ptr].add;
     usart_recv_payload_length = usart_recv_buff[usart_recv_buff_read_ptr].len;
     
     unsigned char length = usart_recv_payload_length;
@@ -395,7 +413,7 @@ unsigned char usart_recv_buffer_read()
 }
 
 // Copy message from recv buffer into ring buffer
-unsigned char usart_send_buffer_write(const unsigned char src, const unsigned char dst, unsigned char payload_length, unsigned char *payload)
+unsigned char usart_send_buffer_write(const unsigned char dst, unsigned char payload_length, unsigned char *payload)
 {
     if (!USART_BUFF_HAS_SPACE(usart_send_buff_write_ptr, usart_send_buff_read_ptr, USART_SEND_BUFFER_SIZE)) {
         return USART_BUFFER_FULL; // No more space in the buffer for new messages
@@ -405,8 +423,7 @@ unsigned char usart_send_buffer_write(const unsigned char src, const unsigned ch
         return USART_ERROR; // Given data is longer than maximum payload length
     }
 
-    usart_send_buff[usart_send_buff_write_ptr].src = src;
-    usart_send_buff[usart_send_buff_write_ptr].dst = dst;
+    usart_send_buff[usart_send_buff_write_ptr].add = dst;
     usart_send_buff[usart_send_buff_write_ptr].len = payload_length;
     unsigned char *ptr = usart_send_buff[usart_send_buff_write_ptr].data;
 
