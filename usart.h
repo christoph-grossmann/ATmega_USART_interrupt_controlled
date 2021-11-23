@@ -66,8 +66,8 @@
  */
 
 void usart_init(void);
-int usart_recv_buffer_read();
-int usart_send_buffer_write(const unsigned char src, const unsigned char dst, unsigned char payload_length, unsigned char *payload);
+unsigned char usart_recv_buffer_read();
+unsigned char usart_send_buffer_write(const unsigned char src, const unsigned char dst, unsigned char payload_length, unsigned char *payload);
 unsigned char usart_device_id_read();
 void usart_device_id_write(unsigned char device_id);
 

@@ -453,7 +453,7 @@ void usart_init(void)
 }
 
 // Reads the next unread message from the ring buffer into the usart_recv_... variables
-int usart_recv_buffer_next_message()
+unsigned char usart_recv_buffer_next_message()
 {
     if (!USART_BUFF_CONTAINS_UNREAD(usart_recv_buff_write_ptr, usart_recv_buff_read_ptr)) {
         return USART_ERROR; //  o new messages to return
@@ -484,7 +484,7 @@ int usart_recv_buffer_next_message()
 }
 
 // Copy message from recv buffer into ring buffer
-int usart_send_buffer_write(const unsigned char src, const unsigned char dst, unsigned char payload_length, unsigned char *payload)
+unsigned char usart_send_buffer_write(const unsigned char src, const unsigned char dst, unsigned char payload_length, unsigned char *payload)
 {
     if (!USART_BUFF_HAS_SPACE(usart_send_buff_write_ptr, usart_send_buff_read_ptr, USART_SEND_BUFFER_SIZE)) {
         return USART_BUFFER_FULL; // No more space in the buffer for new messages
