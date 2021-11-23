@@ -8,6 +8,10 @@
 #include <avr/eeprom.h>
 #include <util/delay.h>
 
+/*
+ * Possible states of the send and receiver interrupt handler.
+ */
+
 #define USART_STATE_IDLE 0
 #define USART_STATE_RXACT 1
 #define USART_STATE_SRC 2
@@ -16,9 +20,17 @@
 #define USART_STATE_PAYLOAD 5
 #define USART_STATE_CRC 6
 
+/*
+ * Possible states of the send and receive interrupt watchdog.
+ */
+
 #define USART_WTCHDG_DSBLD 0 // watchdog disabled
 #define USART_WTCHDG_ALIVE 1 // process alive
 #define USART_WTCHDG_TRMIN 2 // process marked for termination
+
+/*
+ * Inline functions
+ */
 
 #define USART_UPDATE_CHECKSUM(sum, val) sum ^= val
 
@@ -79,7 +91,7 @@ static volatile unsigned char usart_recv_buff_read_ptr = 0;
  * Implementation
  */
 
-// ATmega328P[DATASHEET] p. 151
+// Send interrupt functionality // ATmega328P[DATASHEET] p. 151
 ISR(USART_UDRE_VECT)
 {
     static unsigned char payload_length = 0;
@@ -203,6 +215,7 @@ reset_send:
     USART_RECV_INTRRPT_NABLE;
 }
 
+// Recv interrupt functionality
 ISR(USART_RXC_VECT)
 {
     static unsigned char cur_src = 0;
@@ -298,10 +311,13 @@ reset_recv:
     usart_recv_state = USART_STATE_IDLE;
 }
 
+// Timer interrupt functionality
 ISR(USART_TIMER_COMPA_VECT)
 {
+    // Reset timer (so it doesn't just continue counting where it left off)
     USART_TIMER_TCNT = 0;
 
+    // Terminate send process if it was marked for termination already
     if (usart_send_watchdog == USART_WTCHDG_TRMIN)
     {
         usart_send_state = USART_STATE_IDLE;
@@ -312,14 +328,17 @@ ISR(USART_TIMER_COMPA_VECT)
         USART_RECV_INTRRPT_NABLE;
     }
 
+    // Terminate recv process if it was marked for termination already
     if (usart_recv_watchdog == USART_WTCHDG_TRMIN)
     {
         usart_recv_state = USART_STATE_IDLE;
         usart_recv_watchdog = USART_WTCHDG_DSBLD;
         usart_send_error_state = USART_TIMEOUT;
+
         USART_SEND_INTRRPT_NABLE;
     }
 
+    // Enable send interrupt if new messages are available and recv is not currently running
     if (usart_send_watchdog == USART_WTCHDG_DSBLD
         && usart_recv_watchdog == USART_WTCHDG_DSBLD
         && USART_BUFF_CONTAINS_UNREAD(usart_send_buff_write_ptr, usart_send_buff_read_ptr))
@@ -327,11 +346,13 @@ ISR(USART_TIMER_COMPA_VECT)
         USART_SEND_INTRRPT_NABLE;
     }
     
+    // Set watchdog to marked for termination if it is currently alive
     if (usart_send_watchdog == USART_WTCHDG_ALIVE)
     {
         usart_send_watchdog = USART_WTCHDG_TRMIN;
     }
 
+    // Set watchdog to marked for termination if it is currently alive
     if (usart_recv_watchdog == USART_WTCHDG_ALIVE)
     {
         usart_recv_watchdog = USART_WTCHDG_TRMIN;
@@ -386,7 +407,7 @@ void usart_init(void)
 unsigned char usart_recv_buffer_read()
 {
     if (!USART_BUFF_CONTAINS_UNREAD(usart_recv_buff_write_ptr, usart_recv_buff_read_ptr)) {
-        return USART_ERROR; //  o new messages to return
+        return USART_ERROR; // No new messages to return
     }
 
     // Disable all interrupts
