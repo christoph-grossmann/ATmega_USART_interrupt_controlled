@@ -58,8 +58,8 @@ unsigned char len; // payloud length
 unsigned char data[USART_MAX_PAYLOAD]; // payloud
 } usart_message;
 
-static volatile unsigned char usart_myid;
-unsigned char ee_usart_myid EEMEM = 0xaa; // default device id
+static volatile unsigned char usart_device_id;
+unsigned char ee_usart_device_id EEMEM = USART_DEFAULT_DEVICE_ID; // default device id
 
 const unsigned char crc8_table[256] PROGMEM = {
         0x00, 0x5E, 0xBC, 0xE2, 0x61, 0x3F, 0xDD, 0x83, 0xC2, 0x9C, 0x7E, 0x20, 0xA3, 0xFD, 0x1F, 0x41,
@@ -352,7 +352,7 @@ ISR(USART_RXC_VECT)
     }
     else if (usart_recv_state == USART_STATE_PAYLOAD)
     {
-        if (usart_recv_crc == in && usart_recv_buff[usart_recv_buff_write_ptr].dst == usart_myid) {
+        if (usart_recv_crc == in && usart_recv_buff[usart_recv_buff_write_ptr].dst == usart_device_id) {
             USART_BUFF_INCR_PTR(usart_recv_buff_write_ptr, USART_RECV_BUFFER_SIZE);
         }
         goto reset_recv;
@@ -444,7 +444,7 @@ void usart_init(void)
     USART_TIMER_ON;
 
     // Read id from EEPROM
-    usart_myid = eeprom_read_byte(&ee_usart_myid);
+    usart_device_id = usart_device_id_read();
 
     _delay_ms(500);
 
@@ -507,4 +507,15 @@ int usart_send_buffer_write(const unsigned char src, const unsigned char dst, un
     USART_BUFF_INCR_PTR(usart_recv_buff_write_ptr, USART_SEND_BUFFER_SIZE);
 
     return USART_SUCCESS;
+}
+
+unsigned char usart_device_id_read()
+{
+    return eeprom_read_byte(&ee_usart_device_id);
+}
+
+void usart_device_id_write(unsigned char device_id)
+{
+    eeprom_write_byte(&ee_usart_device_id, device_id);
+    usart_device_id = device_id;
 }

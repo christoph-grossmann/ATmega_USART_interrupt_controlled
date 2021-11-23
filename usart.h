@@ -35,6 +35,13 @@
 
 #define USART_FRAME_LENGTH 10
 
+#ifndef USART_DEFAULT_DEVICE_ID
+#define USART_DEFAULT_DEVICE_ID 0xaa
+#endif
+#ifndef USART_BROADCAST_ID
+#define USART_BROADCAST_ID 0xff
+#endif
+
 #ifndef USART_PREAMBLE
 #define USART_PREAMBLE 0x40
 #endif
@@ -61,6 +68,8 @@
 void usart_init(void);
 int usart_recv_buffer_read();
 int usart_send_buffer_write(const unsigned char src, const unsigned char dst, unsigned char payload_length, unsigned char *payload);
+unsigned char usart_device_id_read();
+void usart_device_id_write(unsigned char device_id);
 
 static volatile unsigned char usart_recv_src;
 static volatile unsigned char usart_recv_dst;
