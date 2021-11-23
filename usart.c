@@ -21,11 +21,6 @@
 #define USART_WTCHDG_ALIVE 1 // process alive
 #define USART_WTCHDG_TRMIN 2 // process marked for termination
 
-// Set USART_SEND_PIN (DE) to Recv Mode
-#define USART_DE_RX (USART_PORT &= ~(1 << USART_SEND_PIN))
-// Set USART_SEND_PIN (DE) to Send Mode
-#define USART_DE_TX (USART_PORT |= (1 << USART_SEND_PIN))
-
 #define USART_UPDATE_CRC(crc, val) crc = pgm_read_byte(crc8_table + (crc ^ val))
 
 #define USART_BUFF_INCR_PTR(ptr, max) ptr = (ptr + 1) % max
@@ -64,6 +59,11 @@ const unsigned char crc8_table[256] PROGMEM = {
 /*
  * Send
  */
+
+// Set USART_SEND_PIN (DE) to Recv Mode
+#define USART_DE_RX (USART_PORT &= ~(1 << USART_SEND_PIN))
+// Set USART_SEND_PIN (DE) to Send Mode
+#define USART_DE_TX (USART_PORT |= (1 << USART_SEND_PIN))
 
 // Enable receive interrupt
 #define USART_SEND_INTRRPT_NABLE USART_UCSRB |= (1 << USART_UDRIE)
