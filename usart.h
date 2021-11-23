@@ -74,6 +74,6 @@ static volatile unsigned char usart_recv_payload[USART_MAX_PAYLOAD - 5];
 #define USART_SUCCESS 0
 #define USART_ERROR 1
 #define USART_BUFFER_FULL 2
-#define USART_TIMEOUT 'f'
+#define USART_TIMEOUT 0xAA
 
 #endif //USART_H
