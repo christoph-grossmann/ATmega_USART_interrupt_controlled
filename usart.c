@@ -43,10 +43,7 @@
 
 #define USART_BUFF_INCR_PTR(ptr, max) ptr = (ptr + 1) % max
 #define USART_BUFF_CONTAINS_UNREAD(write_ptr, read_ptr) (write_ptr != read_ptr)
-#define USART_BUFF_HAS_SPACE(write_ptr, read_ptr, max) (\
-    (write_ptr + 1 != read_ptr) &&\
-    (write_ptr != max || read_ptr != 0)\
-    )
+#define USART_BUFF_HAS_SPACE(write_ptr, read_ptr, max) ((write_ptr + 1) % max != read_ptr)
 
 typedef struct {
 unsigned char src; // message source
