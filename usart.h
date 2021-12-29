@@ -60,6 +60,14 @@
     )))))
 #define USART_TIMER_TIME \
     (FOCS / 2UL / USART_TIMER_PRESCALE / USART_TIMER_FRAME_HERTZ + 1)
+#define USART_TIMER_CS \
+    (USART_TIMER_PRESCALE ==    0 ? 0 : \
+    (USART_TIMER_PRESCALE ==    1 ? (1 << USART_TIMER_CS0) : \
+    (USART_TIMER_PRESCALE ==    8 ? (1 << USART_TIMER_CS1) : \
+    (USART_TIMER_PRESCALE ==   64 ? (1 << USART_TIMER_CS0) | (1 << USART_TIMER_CS1) : \
+    (USART_TIMER_PRESCALE ==  256 ? (1 << USART_TIMER_CS2) : \
+    (USART_TIMER_PRESCALE == 1024 ? (1 << USART_TIMER_CS0) | (1 << USART_TIMER_CS2) : 0 \
+    ))))))
 
 /*
  * Provided functionality.
@@ -67,7 +75,8 @@
 
 void usart_init(void);
 unsigned char usart_recv_buffer_read();
-unsigned char usart_send_buffer_write(const unsigned char dst, unsigned char payload_length, unsigned char *payload);
+unsigned char usart_send_buffer_write(const unsigned char dst,
+    unsigned char payload_length, unsigned char *payload);
 unsigned char usart_device_id_read();
 void usart_device_id_write(unsigned char device_id);
 

@@ -39,9 +39,9 @@
 #define USART_BUFF_HAS_SPACE(write_ptr, read_ptr, max) ((write_ptr + 1) % max != read_ptr)
 
 typedef struct {
-unsigned char add; // message address (send: destination; recv: source)
-unsigned char len; // payloud length
-unsigned char data[USART_MAX_PAYLOAD]; // payloud
+    unsigned char add; // message address (send: destination; recv: source)
+    unsigned char len; // payloud length
+    unsigned char data[USART_MAX_PAYLOAD]; // payloud
 } usart_message;
 
 static volatile unsigned char usart_device_id;
@@ -389,12 +389,11 @@ void usart_init(void)
     // Configure and enable timer (watchdog for send/recv, enables send interrupt)
     USART_TIMER_OCRA = USART_TIMER_TIME;
     USART_TIMER_TCCRA = 0;
-    USART_TIMER_TCCRB = (1 << USART_TIMER_CS0);
+    USART_TIMER_TCCRB = USART_TIMER_CS;
     USART_TIMER_TIMSK |= (1 << USART_TIMER_OCIEA);
     USART_TIMER_TIFR |= (1 << USART_TIMER_OCFA);
     USART_TIMER_TCNT = 0;
 
-    // Read id from EEPROM
     usart_device_id = usart_device_id_read();
 
     _delay_ms(500);
